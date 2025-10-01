@@ -1,0 +1,108 @@
+/* ===== GenoPilot — Tema con variables CSS =====
+   Cambia el body.className a: theme-clinic | theme-midnight | theme-sand
+================================================ */
+
+/* --------- Paleta por defecto: CLINIC (clara, sanitario) --------- */
+.theme-clinic {
+  --bg:        #f6f9fc;   /* fondo */
+  --surface:   #ffffff;   /* tarjetas, inputs */
+  --line:      #e5e8ef;   /* bordes suaves */
+  --text:      #0f172a;   /* texto principal (slate-900) */
+  --muted:     #475569;   /* texto secundario (slate-600) */
+  --primary:   #2563eb;   /* azul clínico */
+  --accent:    #0ea5a4;   /* teal */
+  --good:      #16a34a;   /* éxito */
+  --warn:      #f59e0b;   /* aviso */
+  --danger:    #ef4444;   /* error */
+}
+
+/* --------- Paleta alternativa: MIDNIGHT (oscuro turquesa) --------- */
+.theme-midnight {
+  --bg:        #0b1016;
+  --surface:   #121a25;
+  --line:      #1e2a42;
+  --text:      #eaf0f6;
+  --muted:     #b3c0d1;
+  --primary:   #06b6d4;  /* cyan */
+  --accent:    #7dd3fc;  /* sky */
+  --good:      #22c55e;
+  --warn:      #fbbf24;
+  --danger:    #f87171;
+}
+
+/* --------- Paleta alternativa: SAND (cálida arena & vino) --------- */
+.theme-sand {
+  --bg:        #faf7f2;
+  --surface:   #ffffff;
+  --line:      #e7e0d6;
+  --text:      #2c241c;
+  --muted:     #6b5d51;
+  --primary:   #b42397;  /* vino */
+  --accent:    #d4a373;  /* arena tostada */
+  --good:      #2e7d32;
+  --warn:      #c27c1a;
+  --danger:    #c62828;
+}
+
+/* ---------- Reglas base (usando variables) ---------- */
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; }
+body {
+  background: var(--bg);
+  color: var(--text);
+}
+
+.navbar {
+  background: var(--surface);
+  border-bottom: 1px solid var(--line);
+}
+.navbar .navbar-brand { color: var(--text); font-weight: 600; }
+
+.card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  color: var(--text);
+}
+
+a { color: var(--primary); }
+.muted { color: var(--muted); }
+
+.form-control, .form-select {
+  background: var(--surface);
+  color: var(--text);
+  border: 1px solid var(--line);
+}
+.form-control:focus, .form-select:focus {
+  box-shadow: 0 0 0 .25rem color-mix(in oklab, var(--primary) 20%, transparent);
+  border-color: var(--primary);
+}
+
+.table {
+  --bs-table-bg: var(--surface);
+  --bs-table-striped-bg: color-mix(in srgb, var(--primary) 4%, var(--surface));
+  --bs-table-striped-color: var(--text);
+  --bs-table-color: var(--text);
+  border-color: var(--line);
+}
+
+.btn-primary {
+  background: var(--primary);
+  border-color: var(--primary);
+}
+.btn-success {
+  background: var(--good);
+  border-color: var(--good);
+}
+.btn-secondary {
+  background: color-mix(in srgb, var(--muted) 25%, var(--surface));
+  border-color: var(--line);
+  color: var(--text);
+}
+
+/* Badge/ayuda */
+.help{
+  display:inline-flex;align-items:center;justify-content:center;
+  width:22px;height:22px;border-radius:50%;
+  background: color-mix(in srgb, var(--primary) 20%, var(--surface));
+  color: var(--text); font-weight:700;font-size:.85rem;cursor:help;margin-left:.35rem
+}

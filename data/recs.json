@@ -1,0 +1,74 @@
+[
+  {
+    "Gene":"DPYD",
+    "Phenotype":"Normal",
+    "Drug":"5-FU\/Capecitabina",
+    "RecText":"Dosis estándar; monitorización habitual.",
+    "Source":"ClinPGX",
+    "URL":"https:\/\/www.clinpgx.org\/chemical\/PA128406956\/guidelineAnnotation\/PA166122686"
+  },
+  {
+    "Gene":"DPYD",
+    "Phenotype":"Intermedio",
+    "Drug":"5-FU\/Capecitabina",
+    "RecText":"Reducción inicial de dosis (~50%) y titulación según tolerancia.",
+    "Source":"ClinPGX",
+    "URL":"https:\/\/www.clinpgx.org\/chemical\/PA128406956\/guidelineAnnotation\/PA166122686"
+  },
+  {
+    "Gene":"DPYD",
+    "Phenotype":"Lento",
+    "Drug":"5-FU\/Capecitabina",
+    "RecText":"Evitar fluoropirimidinas; valorar alternativas.",
+    "Source":"ClinPGX",
+    "URL":"https:\/\/www.clinpgx.org\/chemical\/PA128406956\/guidelineAnnotation\/PA166122686"
+  },
+  {
+    "Gene":"CYP2D6",
+    "Phenotype":"Normal Metabolizer",
+    "Drug":"Tamoxifeno",
+    "RecText":"Estrategia estándar.",
+    "Source":"ClinPGX",
+    "URL":"https:\/\/www.clinpgx.org\/chemical\/PA451581\/guidelineAnnotation\/PA166176068"
+  },
+  {
+    "Gene":"CYP2D6",
+    "Phenotype":"Intermediate Metabolizer",
+    "Drug":"Tamoxifeno",
+    "RecText":"Considerar alternativa o ajuste según guías.",
+    "Source":"ClinPGX",
+    "URL":"https:\/\/www.clinpgx.org\/chemical\/PA451581\/guidelineAnnotation\/PA166176068"
+  },
+  {
+    "Gene":"CYP2D6",
+    "Phenotype":"Poor Metabolizer",
+    "Drug":"Tamoxifeno",
+    "RecText":"Evitar tamoxifeno; usar alternativa.",
+    "Source":"ClinPGX",
+    "URL":"https:\/\/www.clinpgx.org\/chemical\/PA451581\/guidelineAnnotation\/PA166176068"
+  },
+  {
+    "Gene":"UGT1A1",
+    "Phenotype":"Normal",
+    "Drug":"Irinotecán",
+    "RecText":"Dosis estándar; monitorización habitual.",
+    "Source":"ClinPGX",
+    "URL":"https:\/\/www.clinpgx.org\/chemical\/PA450085\/guidelineAnnotation\/PA166104951"
+  },
+  {
+    "Gene":"UGT1A1",
+    "Phenotype":"Intermedio",
+    "Drug":"Irinotecán",
+    "RecText":"Valorar reducción de dosis inicial; monitorizar neutropenia.",
+    "Source":"ClinPGX",
+    "URL":"https:\/\/www.clinpgx.org\/chemical\/PA450085\/guidelineAnnotation\/PA166104951"
+  },
+  {
+    "Gene":"UGT1A1",
+    "Phenotype":"Lento",
+    "Drug":"Irinotecán",
+    "RecText":"Reducir dosis inicial (≈30%) y titular según tolerancia.",
+    "Source":"ClinPGX",
+    "URL":"https:\/\/www.clinpgx.org\/chemical\/PA450085\/guidelineAnnotation\/PA166104951"
+  }
+]

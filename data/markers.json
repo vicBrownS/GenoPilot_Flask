@@ -1,0 +1,284 @@
+{
+  "CYP2D6": [
+    {
+      "column": "CYP2D6*3",
+      "rsid": "rs35724686",
+      "star": "*3",
+      "ref": "T",
+      "var": "-",
+      "options": [
+        "T/T",
+        "-/-"
+      ]
+    },
+    {
+      "column": "CYP2D6*4",
+      "rsid": "rs3892097",
+      "star": "*4",
+      "ref": "C",
+      "var": "T",
+      "options": [
+        "C/C",
+        "C/T",
+        "T/T",
+        "-/-"
+      ]
+    },
+    {
+      "column": "CYP2D6*6",
+      "rsid": "rs5030655",
+      "star": "*6",
+      "ref": "A",
+      "var": "-",
+      "options": [
+        "A/A",
+        "-/-"
+      ]
+    },
+    {
+      "column": "CYP2D6*7",
+      "rsid": "rs5030867",
+      "star": "*7",
+      "ref": "T",
+      "var": "G",
+      "options": [
+        "T/T",
+        "T/G",
+        "G/G",
+        "-/-"
+      ]
+    },
+    {
+      "column": "CYP2D6*8",
+      "rsid": "rs5030865",
+      "star": "*8",
+      "ref": "C",
+      "var": "A",
+      "options": [
+        "C/C",
+        "C/A",
+        "A/A",
+        "-/-"
+      ]
+    },
+    {
+      "column": "CYP2D6*9",
+      "rsid": "rs5030656",
+      "star": "*9",
+      "ref": "CTT",
+      "var": "-",
+      "options": [
+        "CTT/CTT",
+        "-/-"
+      ]
+    },
+    {
+      "column": "CYP2D6*10",
+      "rsid": "rs1135840",
+      "star": "*10",
+      "ref": "C",
+      "var": "G",
+      "options": [
+        "C/C",
+        "C/G",
+        "G/G",
+        "-/-"
+      ]
+    },
+    {
+      "column": "CYP2D6*10*4",
+      "rsid": "rs1065852",
+      "star": "*10,*4",
+      "ref": "G",
+      "var": "A",
+      "options": [
+        "G/G",
+        "G/A",
+        "A/A",
+        "-/-"
+      ]
+    },
+    {
+      "column": "CYP2D6*12",
+      "rsid": "rs5030862",
+      "star": "*12",
+      "ref": "C",
+      "var": "T",
+      "options": [
+        "C/C",
+        "C/T",
+        "T/T",
+        "-/-"
+      ]
+    },
+    {
+      "column": "CYP2D6*14",
+      "rsid": "rs5030865",
+      "star": "*14",
+      "ref": "C",
+      "var": "T",
+      "options": [
+        "C/C",
+        "C/T",
+        "T/T",
+        "-/-"
+      ]
+    },
+    {
+      "column": "CYP2D6*15",
+      "rsid": "rs774671100",
+      "star": "*15",
+      "ref": "A",
+      "var": "-",
+      "options": [
+        "A/A",
+        "-/-"
+      ]
+    },
+    {
+      "column": "CYP2D6*17",
+      "rsid": "rs28371706",
+      "star": "*17",
+      "ref": "G",
+      "var": "A",
+      "options": [
+        "G/G",
+        "G/A",
+        "A/A",
+        "-/-"
+      ]
+    },
+    {
+      "column": "CYP2D6*19",
+      "rsid": "rs72549533",
+      "star": "*19",
+      "ref": "AGTT",
+      "var": "-",
+      "options": [
+        "AGTT/AGTT",
+        "-/-"
+      ]
+    },
+    {
+      "column": "CYP2D6*29",
+      "rsid": "rs59421388",
+      "star": "*29",
+      "ref": "G",
+      "var": "A",
+      "options": [
+        "G/G",
+        "G/A",
+        "A/A",
+        "-/-"
+      ]
+    },
+    {
+      "column": "CYP2D6*41",
+      "rsid": "rs28371725",
+      "star": "*41",
+      "ref": "C",
+      "var": "T",
+      "options": [
+        "C/C",
+        "C/T",
+        "T/T",
+        "-/-"
+      ]
+    },
+    {
+      "column": "CYP2D6*56B",
+      "rsid": "rs72549347",
+      "star": "*56B",
+      "ref": "G",
+      "var": "A",
+      "options": [
+        "G/G",
+        "G/A",
+        "A/A",
+        "-/-"
+      ]
+    },
+    {
+      "column": "CYP2D6*59",
+      "rsid": "rs79292917",
+      "star": "*59",
+      "ref": "C",
+      "var": "T",
+      "options": [
+        "C/C",
+        "C/T",
+        "T/T",
+        "-/-"
+      ]
+    }
+  ],
+  "DPYD": [
+    {
+      "column": "DPYD*2A",
+      "rsid": "rs3918290",
+      "star": "*2A",
+      "ref": "C",
+      "var": "G/T",
+      "options": [
+        "C/C",
+        "C/G",
+        "G/G",
+        "-/-"
+      ]
+    },
+    {
+      "column": "DPYD*13",
+      "rsid": "rs55886062",
+      "star": "*13",
+      "ref": "A",
+      "var": "C/T",
+      "options": [
+        "A/A",
+        "A/C",
+        "C/C",
+        "-/-"
+      ]
+    },
+    {
+      "column": "DPYD_HapB3",
+      "rsid": "rs56038477",
+      "star": "HapB3",
+      "ref": "C",
+      "var": "T",
+      "options": [
+        "C/C",
+        "C/T",
+        "T/T",
+        "-/-"
+      ]
+    },
+    {
+      "column": "DPYD_D949V",
+      "rsid": "rs67376798",
+      "star": "c.2846A>T",
+      "ref": "T",
+      "var": "A",
+      "options": [
+        "T/T",
+        "T/A",
+        "A/A",
+        "-/-"
+      ]
+    }
+  ],
+  "UGT1A1": [
+    {
+      "column": "UGT1A1*80",
+      "rsid": "rs887829",
+      "star": "*80 (tag *28)",
+      "ref": "C",
+      "var": "T",
+      "options": [
+        "C/C",
+        "C/T",
+        "T/T",
+        "-/-"
+      ]
+    }
+  ]
+}

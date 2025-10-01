@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>Vista previa</h2>
+<div class="card p-3 mb-3">
+  <div><strong>Paciente:</strong> {{ patient.full_name }} — HC {{ patient.historia }} — {{ patient.sexo }} — {{ patient.fecha_nac }}</div>
+  <div><strong>Patología principal:</strong> {{ clinical.enf_actual }}</div>
+  <div><strong>Otras patologías:</strong> {{ clinical.otras_pat }}</div>
+  <div><strong>Tratamiento:</strong> {{ clinical.tratamiento }}</div>
+</div>
+
+<table class="table table-striped align-middle">
+  <thead><tr><th>Gen</th><th>Diplotipo</th><th>Fenotipo</th><th>Fármaco</th><th>Recomendación</th></tr></thead>
+  <tbody>
+  {% for row in preview %}
+    <tr><td>{{ row.gen }}</td><td>{{ row.dipl }}</td><td>{{ row.pheno }}</td><td>{{ row.drug }}</td><td class="small">{{ row.rec }}</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+
+<form method="post" action="/generate">
+  <!-- Reinyectar campos -->
+  <input type="hidden" name="nombre" value="{{ patient.nombre }}"/>
+  <input type="hidden" name="apellidos" value="{{ patient.apellidos }}"/>
+  <input type="hidden" name="historia" value="{{ patient.historia }}"/>
+  <input type="hidden" name="sexo" value="{{ patient.sexo }}"/>
+  <input type="hidden" name="fecha_nac" value="{{ patient.fecha_nac }}"/>
+  <input type="hidden" name="enf_actual" value="{{ clinical.enf_actual }}"/>
+  <input type="hidden" name="otras_pat" value="{{ clinical.otras_pat }}"/>
+  <input type="hidden" name="tto" value="{{ clinical.tratamiento }}"/>
+
+  {% for col, options in dpyd_inputs.items() %}
+    <input type="hidden" name="{{ col }}" value="{{ dpyd_vals[col] }}"/>
+  {% endfor %}
+  {% for col, options in ugt_inputs.items() %}
+    <input type="hidden" name="{{ col }}" value="{{ ugt_geno }}"/>
+  {% endfor %}
+
+  <input type="hidden" name="cyp_mode" value="{{ cyp_mode }}"/>
+  {% if cyp_mode == 'diplotype' %}
+    <input type="hidden" name="cyp_a1" value="{{ cyp_a1 }}"/>
+    <input type="hidden" name="cyp_a2" value="{{ cyp_a2 }}"/>
+  {% else %}
+    {% for m in cyp_inputs %}
+      <input type="hidden" name="{{ m[0] }}" value="{{ cyp_vals[m[0]] }}"/>
+    {% endfor %}
+  {% endif %}
+
+  <button class="btn btn-success">Generar DOCX</button>
+  <a href="/" class="btn btn-secondary ms-2">Volver</a>
+</form>
+{% endblock %}

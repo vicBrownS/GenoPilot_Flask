@@ -1,0 +1,185 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>Datos del paciente</h2>
+<form method="post">
+<div class="row g-3">
+  <div class="col-md-6">
+    <label class="form-label">Nombre</label>
+    <input class="form-control" name="nombre" placeholder="Nombre"/>
+  </div>
+  <div class="col-md-6">
+    <label class="form-label">Apellidos</label>
+    <input class="form-control" name="apellidos" placeholder="Apellidos"/>
+  </div>
+  <div class="col-md-4">
+    <label class="form-label">Nº Historia Clínica</label>
+    <input class="form-control" name="historia" placeholder="HC-001"/>
+  </div>
+  <div class="col-md-4">
+    <label class="form-label">Sexo</label>
+    <select class="form-select" name="sexo">
+      <option>-</option><option>F</option><option>M</option><option>Otro</option>
+    </select>
+  </div>
+  <div class="col-md-4">
+    <label class="form-label">Fecha de nacimiento</label>
+    <input class="form-control" name="fecha_nac" placeholder="dd/mm/yyyy"/>
+  </div>
+</div>
+
+<hr/>
+<h2>Datos clínicos</h2>
+<div class="row g-3">
+  <div class="col-md-6">
+    <label class="form-label">
+      Enfermedad actual
+      <span class="help" data-bs-toggle="tooltip" title="Diagnóstico principal que motiva el tratamiento.">?</span>
+    </label>
+    <input class="form-control" name="enf_actual" placeholder="Patología principal"/>
+  </div>
+  <div class="col-md-6">
+    <label class="form-label">
+      Otras patologías
+      <span class="help" data-bs-toggle="tooltip" title="Comorbilidades relevantes separadas por comas.">?</span>
+    </label>
+    <input class="form-control" name="otras_pat" placeholder="Separadas por comas"/>
+  </div>
+  <div class="col-md-12">
+    <label class="form-label">
+      Tratamiento
+      <span class="help" data-bs-toggle="tooltip" title="Fármacos actuales o propuestos, separados por comas.">?</span>
+    </label>
+    <input class="form-control" name="tto" placeholder="Fármacos separados por comas"/>
+  </div>
+</div>
+
+<hr/>
+<h2>Datos genéticos</h2>
+
+<div class="row">
+  <div class="col-md-12">
+    <h5>
+      DPYD — por marcador
+      <span class="help" data-bs-toggle="tooltip"
+        title="Seleccione el genotipo observado para cada SNP (ref/ref, ref/var, var/var).">?</span>
+    </h5>
+  </div>
+  {% for col, options in dpyd_inputs.items() %}
+  <div class="col-md-3">
+    <label class="form-label">{{ col }}</label>
+    <select class="form-select" name="{{ col }}">
+      {% for op in options %}<option>{{ op }}</option>{% endfor %}
+    </select>
+  </div>
+  {% endfor %}
+</div>
+
+<div class="row mt-3">
+  <div class="col-md-12">
+    <h5>
+      UGT1A1*80 (tag *28) — por marcador
+      <span class="help" data-bs-toggle="tooltip"
+        title="*80 etiqueta a *28: C/C≈*1/*1, C/T≈*1/*28, T/T≈*28/*28.">?</span>
+    </h5>
+  </div>
+  {% for col, options in ugt_inputs.items() %}
+  <div class="col-md-3">
+    <label class="form-label">{{ col }}</label>
+    <select class="form-select" name="{{ col }}">
+      {% for op in options %}<option>{{ op }}</option>{% endfor %}
+    </select>
+  </div>
+  {% endfor %}
+</div>
+
+<div class="row mt-3">
+  <div class="col-md-12">
+    <h5>
+      CYP2D6 — elija modo de entrada
+      <span class="help" data-bs-toggle="tooltip"
+        title="‘Diplotipo’ es la notación clínica estándar (p. ej., *1/*4). ‘Por marcadores’ introduce SNPs como en DPYD/UGT1A1.">?</span>
+    </h5>
+
+    <div class="form-check form-check-inline">
+      <input class="form-check-input" type="radio" name="cyp_mode" id="mode_dipl" value="diplotype" checked>
+      <label class="form-check-label" for="mode_dipl">Diplotipo (rápido)</label>
+    </div>
+    <div class="form-check form-check-inline">
+      <input class="form-check-input" type="radio" name="cyp_mode" id="mode_mark" value="markers">
+      <label class="form-check-label" for="mode_mark">Por marcadores (detallado)</label>
+    </div>
+  </div>
+
+  <!-- Sección Diplotipo -->
+  <div id="cyp_diplotype_section" class="col-md-6 mt-2">
+    <div class="row g-3">
+      <div class="col-md-6">
+        <label class="form-label">
+          Alelo 1
+          <span class="help" data-bs-toggle="tooltip" title="Haplotipo ‘estrella’ (p. ej., *1, *4, *10).">?</span>
+        </label>
+        <select class="form-select" name="cyp_a1">
+          {% for s in cyp_stars %}<option>{{ s }}</option>{% endfor %}
+        </select>
+      </div>
+      <div class="col-md-6">
+        <label class="form-label">
+          Alelo 2
+          <span class="help" data-bs-toggle="tooltip" title="Segundo haplotipo. La combinación forma el diplotipo clínico.">?</span>
+        </label>
+        <select class="form-select" name="cyp_a2">
+          {% for s in cyp_stars %}<option>{{ s }}</option>{% endfor %}
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <!-- Sección Marcadores -->
+  <div id="cyp_markers_section" class="col-12 mt-3 d-none">
+    <div class="card p-3">
+      <div class="mb-2">
+        <strong>Entrada por marcadores CYP2D6</strong>
+        <span class="help" data-bs-toggle="tooltip"
+          title="Selecciona los genotipos por SNP. La app infiere un diplotipo aproximado docente.">?</span>
+      </div>
+      <div class="row g-3">
+        {% for m in cyp_inputs %}
+          <div class="col-md-3">
+            <label class="form-label">{{ m[0] }}</label>
+            <select class="form-select" name="{{ m[0] }}">
+              {% for op in m[1] %}<option>{{ op }}</option>{% endfor %}
+            </select>
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="mt-4">
+  <button class="btn btn-primary">Vista previa</button>
+</div>
+</form>
+
+<!-- Script de conmutación de secciones -->
+<script>
+  const radioDipl = document.getElementById('mode_dipl');
+  const radioMark = document.getElementById('mode_mark');
+  const secDipl   = document.getElementById('cyp_diplotype_section');
+  const secMark   = document.getElementById('cyp_markers_section');
+
+  function toggleCYP() {
+    if (radioDipl.checked) {
+      secDipl.classList.remove('d-none');
+      secMark.classList.add('d-none');
+    } else {
+      secDipl.classList.add('d-none');
+      secMark.classList.remove('d-none');
+    }
+  }
+  radioDipl.addEventListener('change', toggleCYP);
+  radioMark.addEventListener('change', toggleCYP);
+  // Estado inicial
+  toggleCYP();
+</script>
+{% endblock %}
