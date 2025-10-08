@@ -18,7 +18,7 @@
 </table>
 
 <form method="post" action="/generate">
-  <!-- Reinyectar campos -->
+  <!-- Paciente -->
   <input type="hidden" name="nombre" value="{{ patient.nombre }}"/>
   <input type="hidden" name="apellidos" value="{{ patient.apellidos }}"/>
   <input type="hidden" name="historia" value="{{ patient.historia }}"/>
@@ -28,13 +28,29 @@
   <input type="hidden" name="otras_pat" value="{{ clinical.otras_pat }}"/>
   <input type="hidden" name="tto" value="{{ clinical.tratamiento }}"/>
 
-  {% for col, options in dpyd_inputs.items() %}
-    <input type="hidden" name="{{ col }}" value="{{ dpyd_vals[col] }}"/>
-  {% endfor %}
-  {% for col, options in ugt_inputs.items() %}
-    <input type="hidden" name="{{ col }}" value="{{ ugt_geno }}"/>
-  {% endfor %}
+  <!-- DPYD -->
+  <input type="hidden" name="dpyd_mode" value="{{ dpyd_mode }}"/>
+  {% if dpyd_mode == 'diplotype' %}
+    <input type="hidden" name="dpyd_a1" value="{{ dpyd_a1 }}"/>
+    <input type="hidden" name="dpyd_a2" value="{{ dpyd_a2 }}"/>
+  {% else %}
+    {% for col, options in dpyd_inputs.items() %}
+      <input type="hidden" name="{{ col }}" value="{{ dpyd_vals[col] }}"/>
+    {% endfor %}
+  {% endif %}
 
+  <!-- UGT1A1 -->
+  <input type="hidden" name="ugt_mode" value="{{ ugt_mode }}"/>
+  {% if ugt_mode == 'diplotype' %}
+    <input type="hidden" name="ugt_a1" value="{{ ugt_a1 }}"/>
+    <input type="hidden" name="ugt_a2" value="{{ ugt_a2 }}"/>
+  {% else %}
+    {% for col, options in ugt_inputs.items() %}
+      <input type="hidden" name="{{ col }}" value="{{ ugt_geno }}"/>
+    {% endfor %}
+  {% endif %}
+
+  <!-- CYP2D6 -->
   <input type="hidden" name="cyp_mode" value="{{ cyp_mode }}"/>
   {% if cyp_mode == 'diplotype' %}
     <input type="hidden" name="cyp_a1" value="{{ cyp_a1 }}"/>
@@ -45,7 +61,7 @@
     {% endfor %}
   {% endif %}
 
-  <button class="btn btn-success">Generar DOCX</button>
+  <button class="btn btn-success">Generar PDF</button>
   <a href="/" class="btn btn-secondary ms-2">Volver</a>
 </form>
 {% endblock %}
