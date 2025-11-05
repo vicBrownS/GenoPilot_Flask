@@ -17,6 +17,10 @@ from docx.shared import Pt, Cm
 from docx.oxml import OxmlElement
 from docx.oxml.ns import qn
 
+import os, platform
+DISABLE_PDF = os.getenv("DISABLE_PDF", "0") == "1"
+IS_WINDOWS = platform.system() == "Windows"
+
 bp = Blueprint("main", __name__)
 BASE_DIR     = os.path.dirname(os.path.dirname(__file__))
 DATA_DIR     = os.path.join(BASE_DIR, "data")
@@ -610,15 +614,20 @@ def generate():
     # --------------------------- Exportación final ---------------------------
     pdf_name = f"GenoPilot_{patient.get('full_name','Paciente')}_{now.strftime('%Y%m%d_%H%M')}.pdf"
     pdf_path = os.path.join(REPORTS_DIR, pdf_name)
-    try:
-        from docx2pdf import convert
-        convert(tmp_docx, pdf_path)   # Requiere MS Word (Windows)
-        return send_file(pdf_path, as_attachment=True, download_name=pdf_name, mimetype="application/pdf")
-    except Exception:
-        # Fallback: entregar DOCX si no se puede convertir a PDF
-        return send_file(
-            tmp_docx,
-            as_attachment=True,
-            download_name=pdf_name.replace(".pdf", ".docx"),
-            mimetype="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-        )
+
+    if IS_WINDOWS and not DISABLE_PDF:
+        try:
+            from docx2pdf import convert
+            convert(tmp_docx, pdf_path)   # Requiere MS Word (Windows)
+            return send_file(pdf_path, as_attachment=True, download_name=pdf_name, mimetype="application/pdf")
+        except Exception:
+            pass  # Fallback a DOCX más abajo
+
+    # Fallback: entregar DOCX
+    return send_file(
+        tmp_docx,
+        as_attachment=True,
+        download_name=pdf_name.replace(".pdf", ".docx"),
+        mimetype="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    )
+
