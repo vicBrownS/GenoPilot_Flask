@@ -1,0 +1,6 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>Lote finalizado</h2>
+<p>Se han procesado {{ total }} informes. Puedes encontrarlos en <code>/reports</code>.</p>
+<a href="{{ url_for('main.import_excel') }}">Volver a importar</a>
+{% endblock %}

@@ -1,0 +1,8 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>Importar Excel de genotipos</h2>
+<form method="post" enctype="multipart/form-data" class="mt-4">
+  <input type="file" name="file" accept=".xlsx,.xls,.csv" required>
+  <button type="submit">Leer archivo</button>
+</form>
+{% endblock %}

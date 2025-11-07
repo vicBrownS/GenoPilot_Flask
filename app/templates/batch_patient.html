@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>Paciente {{ idx+1 }} de {{ total }} — Muestra: {{ sample }}</h2>
+
+<div class="card">
+  <h3>Resumen genético detectado</h3>
+  <ul>
+    <li><strong>DPYD:</strong> {{ dpyd.dipl }} — {{ dpyd.pheno }} — Dosis: {{ dpyd.dose }}<br>{{ dpyd.rec }}</li>
+    <li><strong>CYP2D6:</strong> {{ cyp.dipl }} — {{ cyp.pheno }} — Dosis: {{ cyp.dose }}<br>{{ cyp.rec }}</li>
+    <li><strong>UGT1A1:</strong> {{ ugt.dipl }} — {{ ugt.pheno }} — Dosis: {{ ugt.dose }}<br>{{ ugt.rec }}</li>
+  </ul>
+</div>
+
+<form method="post" class="mt-4">
+  <div class="grid">
+    <label>Nombre <input name="nombre" required></label>
+    <label>Apellidos <input name="apellidos" required></label>
+    <label>Historia clínica <input name="historia"></label>
+    <label>Sexo
+      <select name="sexo">
+        <option>-</option><option>F</option><option>M</option>
+      </select>
+    </label>
+    <label>Fecha de nacimiento <input name="fecha_nac" type="date"></label>
+  </div>
+  <h4>Datos clínicos (opcional)</h4>
+  <label>Enfermedad actual <textarea name="enf_actual"></textarea></label>
+  <label>Otras patologías <textarea name="otras_pat"></textarea></label>
+  <label>Tratamiento actual <textarea name="tto"></textarea></label>
+
+  <button type="submit">Generar informe y continuar ➜</button>
+</form>
+{% endblock %}

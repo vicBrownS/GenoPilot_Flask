@@ -7,9 +7,10 @@ de la tabla de resultados al ancho útil de página, con layout fijo y soft-wrap
 """
 from __future__ import annotations
 
-from flask import Blueprint, render_template, request, send_file
-import os, json, datetime, re, tempfile, unicodedata
+from flask import Blueprint, render_template, request, send_file, session, redirect, url_for, flash
+import os, json, datetime, re, tempfile, unicodedata, uuid   
 from io import BytesIO
+import pandas as pd 
 
 from docxtpl import DocxTemplate
 from docx import Document
@@ -28,6 +29,10 @@ REPORTS_DIR  = os.path.join(BASE_DIR, "reports")
 TPL_DATA_PATH = os.path.join(DATA_DIR, "GenoPilot_report_template.docx")
 TPL_APP_PATH  = os.path.join(os.path.dirname(__file__), "templates", "report_template.docx")
 os.makedirs(REPORTS_DIR, exist_ok=True)
+
+# app/routes.py  (coloca cerca de constantes ya definidas)
+ALLOWED_EXTS = {"xlsx", "xls", "csv"}  # === NEW ===
+
 
 # ============================================================================
 # Carga de datos (desde tu Excel ya volcados a JSON)
@@ -305,17 +310,16 @@ def _set_font_size(cell, pt):
         for r in p.runs:
             r.font.size = Pt(pt)
 
+# app/routes.py  (ajusta la tabla del informe para una 5ª columna 'Dosis (%)')  # === CHANGED ===
 def build_result_subdoc(tpl: DocxTemplate, summary: list):
     """
     Construye la tabla de resultados para incrustar en la plantilla (subdoc).
-    Nota: Los anchos aquí son orientativos; el ajuste final lo realiza
-    'fit_results_table' tras renderizar el documento completo.
     """
     sub = tpl.new_subdoc()
-    table = sub.add_table(rows=1, cols=4)
+    table = sub.add_table(rows=1, cols=5)  # 4 → 5
     table.style = "Table Grid"
 
-    headers = ["Gen", "Fenotipo", "Fármaco de interés", "Recomendación terapéutica"]
+    headers = ["Gen", "Fenotipo", "Fármaco de interés", "Dosis (%)", "Recomendación terapéutica"]  # nuevo orden
     hdr = table.rows[0].cells
     for i, t in enumerate(headers):
         hdr[i].text = t
@@ -324,22 +328,14 @@ def build_result_subdoc(tpl: DocxTemplate, summary: list):
 
     for row in summary:
         r = table.add_row().cells
-        r[0].text = f"{row['gen']}\n{row['diplotipo']}"
-        r[1].text = row["fenotipo"]
+        r[0].text = row["gen"]
+        r[1].text = row["pheno"]
         r[2].text = row["drug"]
-        r[3].text = row["rec"]
+        r[3].text = row.get("dose", "—")  # NUEVO
+        r[4].text = row["rec"]
+        for c in r:
+            _set_font_size(c, 10)
 
-        fen = row["fenotipo"].lower()
-        shade = "E6F4E6" if "normal" in fen else ("F6DEDE" if any(k in fen for k in ("intermedio", "pobre", "ultra")) else "FFFFFF")
-        _shade(r[1], shade)
-        _shade(r[3], shade)
-
-        for c in (r[0], r[1], r[2]):
-            _set_font_size(c, 9.5)
-        _set_font_size(r[3], 9)
-
-    # Anchos base contenidos (se sobreescriben con el ajuste post-render)
-    _set_col_widths(table, [3.0, 4.0, 4.0, 6.5])  # ≈17.5 cm total
     return sub
 
 # ============================================================================
@@ -374,13 +370,20 @@ def fit_results_table(doc) -> None:
     - Aplica soft-wrap en columnas 3 y 4 (fármaco, recomendación).
     """
     # 1) Localizar tabla por cabecera
-    def is_results_table(t):
+    def is_results_table(table) -> bool:
         try:
-            hdr = [ _norm(c.text) for c in t.rows[0].cells ]
-            return ("gen" in hdr[0]
-                    and "fenotipo" in hdr[1]
-                    and "farmaco" in hdr[2]
-                    and "recomendacion" in hdr[3])
+            hdr = [_norm(c.text) for c in table.rows[0].cells]
+            # 5 columnas (nuevo)
+            ok5 = (len(hdr) == 5 and
+                "gen" in hdr[0] and "fenotipo" in hdr[1] and
+                ("farmaco" in hdr[2] or "fármaco" in hdr[2]) and
+                "dosis" in hdr[3] and "recomendacion" in hdr[4])
+            # 4 columnas (compatibilidad atrás)
+            ok4 = (len(hdr) == 4 and
+                "gen" in hdr[0] and "fenotipo" in hdr[1] and
+                ("farmaco" in hdr[2] or "fármaco" in hdr[2]) and
+                "recomendacion" in hdr[3])
+            return ok4 or ok5
         except Exception:
             return False
 
@@ -395,7 +398,11 @@ def fit_results_table(doc) -> None:
     usable_cm *= 0.98
 
     # 3) Proporciones de columnas (ajustables si lo deseas)
-    fracs = (0.16, 0.22, 0.22, 0.40)
+    cols = len(table.columns)
+    if cols == 5:
+        fracs = (0.14, 0.22, 0.22, 0.12, 0.30)  # Gen, Fenotipo, Fármaco, Dosis, Recomendación
+    else:
+        fracs = (0.16, 0.22, 0.22, 0.40)
     widths_cm = [round(usable_cm * f, 2) for f in fracs]
     # Asegurar que la suma no supera el usable
     overflow = sum(widths_cm) - usable_cm
@@ -630,3 +637,236 @@ def generate():
         mimetype="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
     )
 
+
+# app/routes.py  (utilidad para extraer % de dosis)  # === NEW ===
+def extract_dose_pct(gene: str, pheno: str, rec_text: str | None) -> str:
+    """
+    Devuelve el % de dosis a ADMINISTRAR si aplica (p.ej., '50%', '70%').
+    Reglas específicas + extracción por regex como respaldo.
+    """
+    p = pheno.lower().strip()
+    # Reglas explícitas (docencia/guías más comunes)
+    if gene == "DPYD":
+        if "lento" in p:
+            return "0% (evitar)"
+        if "intermedio" in p:
+            return "50%"
+        if "normal" in p:
+            return "100%"
+    if gene == "UGT1A1":
+        if "lento" in p:
+            # En tus textos: "Reducir dosis inicial (≈30%)" ⇒ administrar ~70%
+            return "70%"
+        if "normal" in p:
+            return "100%"
+
+    # Extracción de porcentajes del texto (si hay)
+    t = (rec_text or "")
+    m_range = re.search(r'(\d{1,3})\s*[–-]\s*(\d{1,3})\s*%', t)
+    if m_range:
+        a, b = m_range.groups()
+        return f"{a}–{b}%"
+    m_single = re.search(r'[≈~]?\s*(\d{1,3})\s*%', t)
+    if m_single:
+        return f"{m_single.group(1)}%"
+
+    return "—"
+
+# app/routes.py  (utilidades para lote Excel)  # === NEW ===
+def _norm_excel_val(x) -> str:
+    """Normaliza celdas del Excel a 'A/B', manejando '-', NaN o 'UND'."""
+    if x is None:
+        return "-/-"
+    s = str(x).strip().upper()
+    if s in {"", "NAN", "NA", "NONE"}:
+        return "-/-"
+    s = s.replace(" ", "").replace("\\", "/")
+    s = s.replace("UND", "-")
+    return s
+
+def _save_batch(rows: list[dict]) -> str:
+    """Guarda filas normalizadas en un JSON temporal y devuelve un token."""
+    token = f"batch_{uuid.uuid4().hex}.json"
+    path = os.path.join(tempfile.gettempdir(), token)
+    with open(path, "w", encoding="utf-8") as f:
+        json.dump(rows, f, ensure_ascii=False, indent=2)
+    session["batch_token"] = token
+    return token
+
+def _load_batch(token: str) -> list[dict]:
+    path = os.path.join(tempfile.gettempdir(), token)
+    with open(path, "r", encoding="utf-8") as f:
+        return json.load(f)
+
+# app/routes.py  (parser del Excel)  # === NEW ===
+def parse_lab_excel(file_storage) -> tuple[str, int]:
+    """
+    Lee el Excel/CSV del laboratorio y guarda filas normalizadas en un JSON temporal.
+    Devuelve (token_json, n_filas_utiles).
+    """
+    name = (file_storage.filename or "").lower()
+    ext = name.split(".")[-1]
+    if ext not in ALLOWED_EXTS:
+        raise ValueError("Formato no soportado. Sube .xlsx, .xls o .csv")
+
+    if ext == "csv":
+        df = pd.read_csv(file_storage, dtype=str, keep_default_na=False)
+    else:
+        df = pd.read_excel(file_storage, dtype=str, keep_default_na=False)
+
+    # Columnas esperadas
+    need_cols = ["Sample/Assay"]
+    for g in ("CYP2D6", "DPYD", "UGT1A1"):
+        for m in MARKERS.get(g, []):
+            need_cols.append(m["column"])
+
+    # Subconjunto de columnas existentes (no fallar si falta alguna)
+    cols = [c for c in df.columns if c in need_cols]
+    if "Sample/Assay" not in cols:
+        raise ValueError("Falta la columna 'Sample/Assay'")
+
+    rows = []
+    for _, r in df.iterrows():
+        row = {"sample": str(r.get("Sample/Assay", "")).strip()}
+        # Guardamos solo lo necesario por gen:
+        for m in MARKERS.get("CYP2D6", []):
+            row[m["column"]] = _norm_excel_val(r.get(m["column"]))
+        for m in MARKERS.get("DPYD", []):
+            row[m["column"]] = _norm_excel_val(r.get(m["column"]))
+        for m in MARKERS.get("UGT1A1", []):
+            row[m["column"]] = _norm_excel_val(r.get(m["column"]))
+
+        # descarta filas totalmente vacías
+        if row["sample"] or any(v and v != "-/-" for k, v in row.items() if k != "sample"):
+            rows.append(row)
+
+    token = _save_batch(rows)
+    return token, len(rows)
+
+
+# app/routes.py  (rutas nuevas)  # === NEW ===
+@bp.route("/import", methods=["GET", "POST"])
+def import_excel():
+    """
+    Paso 1: subir Excel. Si OK, redirige a /batch/0 con token.
+    """
+    if request.method == "POST":
+        f = request.files.get("file")
+        if not f:
+            flash("Sube un archivo Excel/CSV.", "warning")
+            return redirect(url_for("main.import_excel"))
+        try:
+            token, n = parse_lab_excel(f)
+            flash(f"Fichero leído correctamente. {n} fila(s) para procesar.", "success")
+            return redirect(url_for("main.batch_patient", idx=0, token=token))
+        except Exception as e:
+            flash(f"Error importando: {e}", "danger")
+            return redirect(url_for("main.import_excel"))
+
+    return render_template("import.html")
+
+@bp.route("/batch/<int:idx>", methods=["GET", "POST"])
+def batch_patient(idx: int):
+    """
+    Paso 2..N: para la fila 'idx' del Excel:
+      - muestra ficha breve + formulario de paciente
+      - al enviar, genera el informe y avanza a la siguiente
+    """
+    token = request.args.get("token") or session.get("batch_token")
+    if not token:
+        flash("Sesión de lote no encontrada.", "warning")
+        return redirect(url_for("main.import_excel"))
+
+    rows = _load_batch(token)
+    if idx >= len(rows):
+        return render_template("batch_done.html", total=len(rows))
+
+    row = rows[idx]
+
+    # Construimos dicts como los de tu formulario manual
+    dpyd_vals = {m["column"]: row.get(m["column"], "-/-") for m in MARKERS.get("DPYD", [])}
+    ugt_vals  = {m["column"]: row.get(m["column"], "-/-") for m in MARKERS.get("UGT1A1", [])}
+    cyp_vals  = {m["column"]: row.get(m["column"], "-/-") for m in MARKERS.get("CYP2D6", [])}
+
+    # Cálculos (reutilizamos tus funciones)
+    dpyd_dipl, dpyd_pheno, dpyd_rec, dpyd_polym = dpyd_from_markers(dpyd_vals)
+    ugt_dipl,  ugt_pheno,  ugt_rec,  ugt_polym  = ugt1a1_from_markers(ugt_vals)
+    cyp_dipl,  cyp_pheno,  cyp_rec,  cyp_polym  = cyp2d6_from_markers(cyp_vals)
+
+    # Dosis (%)
+    dpyd_dose = extract_dose_pct("DPYD",  dpyd_pheno, dpyd_rec)
+    ugt_dose  = extract_dose_pct("UGT1A1", ugt_pheno,  ugt_rec)
+    cyp_dose  = extract_dose_pct("CYP2D6", cyp_pheno,  cyp_rec)
+
+    if request.method == "POST":
+        # Datos del paciente
+        patient = {
+            "nombre":     request.form.get("nombre", ""),
+            "apellidos":  request.form.get("apellidos", ""),
+            "full_name":  (request.form.get("nombre", "") + " " + request.form.get("apellidos", "")).strip(),
+            "historia":   request.form.get("historia", ""),
+            "sexo":       request.form.get("sexo", "-"),
+            "fecha_nac":  request.form.get("fecha_nac", "")
+        }
+        clinical = {
+            "enf_actual":  request.form.get("enf_actual", ""),
+            "otras_pat":   request.form.get("otras_pat", ""),
+            "tratamiento": request.form.get("tto", ""),
+        }
+
+        # Render directo (como en /generate)
+        tpl = DocxTemplate(TPL_DATA_PATH)
+        now = datetime.datetime.now()
+        results = [
+            {"gen": "DPYD",   "dipl": dpyd_dipl, "pheno": dpyd_pheno, "drug": "5-FU/Capecitabina", "rec": dpyd_rec, "dose": dpyd_dose},
+            {"gen": "CYP2D6", "dipl": cyp_dipl,  "pheno": cyp_pheno,  "drug": "Tamoxifeno",        "rec": cyp_rec,  "dose": cyp_dose},
+            {"gen": "UGT1A1", "dipl": ugt_dipl,  "pheno": ugt_pheno,  "drug": "Irinotecán",        "rec": ugt_rec,  "dose": ugt_dose},
+        ]
+        context = {
+            "today": now.strftime("%d/%m/%Y"),
+            "patient": patient,
+            "clinical": clinical,
+            "dpyd": {"dipl": dpyd_dipl, "pheno": dpyd_pheno, "polym": "\n".join(dpyd_polym)},
+            "cyp2d6": {"dipl": cyp_dipl, "pheno": cyp_pheno, "polym": "\n".join(cyp_polym)},
+            "ugt1a1": {"dipl": ugt_dipl, "pheno": ugt_pheno, "polym": "\n".join(ugt_polym)},
+            "results_subdoc": build_result_subdoc(tpl, results),
+            "meta": {"sample": row.get("sample", ""), "version": "0.6.0"},
+        }
+
+        tmp_docx = os.path.join(tempfile.gettempdir(), f"GenoPilot_tmp_{now.strftime('%H%M%S')}.docx")
+        tpl.render(context)
+        tpl.save(tmp_docx)
+
+        try:
+            doc = Document(tmp_docx)
+            fit_results_table(doc)
+            doc.save(tmp_docx)
+        except Exception:
+            pass
+
+        os.makedirs(REPORTS_DIR, exist_ok=True)
+        safe_name = re.sub(r"[^A-Za-z0-9 _.-]", "", patient["full_name"] or row.get("sample", "") or "Paciente")
+        pdf_name  = f"GenoPilot_{safe_name}_{now.strftime('%Y%m%d_%H%M')}.pdf"
+        pdf_path  = os.path.join(REPORTS_DIR, pdf_name)
+
+        try:
+            if not DISABLE_PDF and IS_WINDOWS:
+                from docx2pdf import convert
+                convert(tmp_docx, pdf_path)
+                return redirect(url_for("main.batch_patient", idx=idx+1, token=token))
+        except Exception:
+            pass
+
+        # Fallback: dejar el DOCX guardado (mismo nombre cambiando extensión)
+        docx_name = pdf_name.replace(".pdf", ".docx")
+        os.replace(tmp_docx, os.path.join(REPORTS_DIR, docx_name))
+        return redirect(url_for("main.batch_patient", idx=idx+1, token=token))
+
+    # GET: pintar pantalla paciente de la fila idx
+    return render_template(
+        "batch_patient.html",
+        idx=idx, total=len(rows), sample=row.get("sample", f"Fila {idx+1}"),
+        dpyd={"dipl": dpyd_dipl, "pheno": dpyd_pheno, "rec": dpyd_rec, "dose": dpyd_dose},
+        cyp={"dipl": cyp_dipl, "pheno": cyp_pheno, "rec": cyp_rec, "dose": cyp_dose},
+        ugt={"dipl": ugt_dipl,  "pheno": ugt_pheno,  "rec": ugt_rec,  "dose": ugt_dose},
+    )
